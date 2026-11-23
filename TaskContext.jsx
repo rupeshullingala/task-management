@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useReducer } from 'react';
-import { uid, stageLabel } from '../utils/helpers.js';
+import { uid, stageLabel } from './helpers.js';
 
 const STORAGE_KEY = 'taskflow-state-v1';
 const TaskContext = createContext(null);
@@ -13,22 +13,46 @@ const seed = () => {
   };
   return {
     activeProjectId: projectId,
-    projects: [{ id: projectId, name: 'Website Redesign', members: ['Asha', 'Ravi', 'Meera'] }],
+    projects: [
+      { id: projectId, name: 'Website Redesign', members: ['Asha', 'Ravi', 'Meera'] },
+    ],
     tasks: [
       {
-        id: uid(), projectId, title: 'Collect brand assets', description: 'Logos, fonts and colour codes.',
-        assignee: 'Asha', deadline: inDays(1), priority: 'Medium', status: 'todo', reminder: true,
+        id: uid(),
+        projectId,
+        title: 'Collect brand assets',
+        description: 'Logos, fonts and colour codes.',
+        assignee: 'Asha',
+        deadline: inDays(1),
+        priority: 'Medium',
+        status: 'todo',
+        reminder: true,
         subtasks: [
           { id: uid(), title: 'Request logo files', done: true },
           { id: uid(), title: 'Confirm fonts', done: false },
         ],
       },
       {
-        id: uid(), projectId, title: 'Design home page wireframe', description: 'Mobile and desktop layouts.',
-        assignee: 'Meera', deadline: inDays(4), priority: 'High', status: 'progress', reminder: true, subtasks: [],
+        id: uid(),
+        projectId,
+        title: 'Design home page wireframe',
+        description: 'Mobile and desktop layouts.',
+        assignee: 'Meera',
+        deadline: inDays(4),
+        priority: 'High',
+        status: 'progress',
+        reminder: true,
+        subtasks: [],
       },
     ],
-    activity: [{ id: uid(), projectId, text: 'Project "Website Redesign" created', at: new Date().toISOString() }],
+    activity: [
+      {
+        id: uid(),
+        projectId,
+        text: 'Project "Website Redesign" created',
+        at: new Date().toISOString(),
+      },
+    ],
   };
 };
 
@@ -37,14 +61,16 @@ const load = () => {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) return JSON.parse(saved);
   } catch (e) {
-    /* ignore corrupted storage */
   }
   return seed();
 };
 
 const log = (state, projectId, text) => ({
   ...state,
-  activity: [{ id: uid(), projectId, text, at: new Date().toISOString() }, ...state.activity].slice(0, 200),
+  activity: [
+    { id: uid(), projectId, text, at: new Date().toISOString() },
+    ...state.activity,
+  ].slice(0, 200),
 });
 
 const patchTask = (state, id, fn) => ({
@@ -57,7 +83,11 @@ function reducer(state, action) {
     case 'ADD_PROJECT': {
       const project = { id: uid(), name: action.name, members: action.members };
       return log(
-        { ...state, projects: [...state.projects, project], activeProjectId: project.id },
+        {
+          ...state,
+          projects: [...state.projects, project],
+          activeProjectId: project.id,
+        },
         project.id,
         `Project "${project.name}" created`
       );
@@ -99,10 +129,20 @@ function reducer(state, action) {
       const old = state.tasks.find((t) => t.id === action.id);
       const c = action.changes;
       let next = patchTask(state, action.id, (t) => ({ ...t, ...c }));
-      if (c.assignee !== undefined && c.assignee !== old.assignee)
-        next = log(next, old.projectId, `"${old.title}" assigned to ${c.assignee || 'nobody'}`);
-      if (c.deadline !== undefined && c.deadline !== old.deadline)
-        next = log(next, old.projectId, `Deadline of "${old.title}" set to ${c.deadline || 'none'}`);
+      if (c.assignee !== undefined && c.assignee !== old.assignee) {
+        next = log(
+          next,
+          old.projectId,
+          `"${old.title}" assigned to ${c.assignee || 'nobody'}`
+        );
+      }
+      if (c.deadline !== undefined && c.deadline !== old.deadline) {
+        next = log(
+          next,
+          old.projectId,
+          `Deadline of "${old.title}" set to ${c.deadline || 'none'}`
+        );
+      }
       return log(next, old.projectId, `Task "${c.title ?? old.title}" updated`);
     }
     case 'MOVE_TASK': {
@@ -120,7 +160,9 @@ function reducer(state, action) {
       return log(
         patchTask(state, action.taskId, (t) => ({
           ...t,
-          subtasks: t.subtasks.map((s) => (s.id === action.subId ? { ...s, done: !s.done } : s)),
+          subtasks: t.subtasks.map((s) =>
+            s.id === action.subId ? { ...s, done: !s.done } : s
+          ),
         })),
         task.projectId,
         `Subtask "${sub.title}" ${sub.done ? 'reopened' : 'completed'}`
@@ -141,12 +183,14 @@ function reducer(state, action) {
 
 export function TaskProvider({ children }) {
   const [state, dispatch] = useReducer(reducer, null, load);
-
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   }, [state]);
-
-  return <TaskContext.Provider value={{ state, dispatch }}>{children}</TaskContext.Provider>;
+  return (
+    <TaskContext.Provider value={{ state, dispatch }}>
+      {children}
+    </TaskContext.Provider>
+  );
 }
 
 export const useTasks = () => useContext(TaskContext);

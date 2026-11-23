@@ -1,9 +1,8 @@
-import { useTasks } from '../context/TaskContext.jsx';
-import { daysUntil } from '../utils/helpers.js';
+import { useTasks } from './TaskContext.jsx';
+import { daysUntil } from './helpers.js';
 
 export default function ReminderBar({ projectId }) {
   const { state } = useTasks();
-
   const due = state.tasks
     .filter((t) => t.projectId === projectId && t.reminder && t.status !== 'done' && t.deadline)
     .map((t) => ({ ...t, days: daysUntil(t.deadline) }))

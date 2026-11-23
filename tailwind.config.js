@@ -1,6 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: ['./index.html', './src/**/*.{js,jsx}'],
+  content: ['./index.html', './*.{js,jsx}', './src/**/*.{js,jsx}'],
   theme: {
     extend: {
       fontFamily: {
@@ -11,7 +11,11 @@ export default {
         board: '#eef2f4',
         ink: '#14232b',
         steel: '#5b6f7a',
-        teal: { DEFAULT: '#0f766e', dark: '#0b5a54', soft: '#d5ece9' },
+        teal: {
+          DEFAULT: '#0f766e',
+          dark: '#0b5a54',
+          soft: '#d5ece9',
+        },
         signal: '#e0a100',
         alert: '#c2410c',
       },
@@ -19,3 +23,4 @@ export default {
   },
   plugins: [],
 };
+
